@@ -24,6 +24,8 @@ import java.util.Set;
  */
 public class DB extends BaseUtil {
     
+    public final String ERROR_NO_DB = "数据库不存在，请先通过add()或createNewTable()来创建一个数据库";
+    
     public final int SORT_NORMAL = 0;       //排序原则：正序
     public final int SORT_BACK = 1;       //排序原则：倒序
     
@@ -38,21 +40,23 @@ public class DB extends BaseUtil {
     private String newTableSQLCommand;
     
     /**
+     * 构造函数
+     *
      * @param context 上下文索引，可直接传 activity.this
      * @param dbName  数据库名称
-     *                构造函数
      */
     public DB(@NonNull Context context, @NonNull String dbName) {
         this.dbName = dbName;
         this.context = context;
-        dbVersion = Preferences.getInstance().getInt(context, "KongzueDB", "dbName.version");
+        dbVersion = Preferences.getInstance().getInt(context, "KongzueDB", dbName + ".version");
     }
     
     /**
+     * 在已有的表中插入一个新数据，注意，如果一开始没有创建新表也无所谓，会按照 data 中的表名自动创建
+     *
      * @param data              数据源
      * @param isAllowRepetition 是否允许重复插入
      * @return 是否插入成功
-     * 在已有的表中插入一个新数据，注意，如果一开始没有创建新表也无所谓，会按照 data 中的表名自动创建
      */
     public boolean add(@NonNull DBData data, boolean isAllowRepetition) {
         try {
@@ -72,7 +76,9 @@ public class DB extends BaseUtil {
                 for (String key : set) {
                     String value = data.getData().get(key);
                     if (!isNull(key) && !isNull(value)) {
-                        createTableSQLCommand = createTableSQLCommand + " " + key + " VARCHAR,";
+                        if (!key.equals("_id")) {
+                            createTableSQLCommand = createTableSQLCommand + " " + key + " VARCHAR,";
+                        }
                     }
                 }
                 
@@ -84,7 +90,7 @@ public class DB extends BaseUtil {
                 log("SQL.exec: " + createTableSQLCommand);
                 
                 if (dbVersion == 0) dbVersion = 1;
-                Preferences.getInstance().set(context, "KongzueDB", "dbName.version", dbVersion);
+                Preferences.getInstance().set(context, "KongzueDB", dbName + ".version", dbVersion);
                 closeDB();
                 helper = new SqlliteHelper(context, dbName, dbVersion);
                 db = helper.getWritableDatabase();
@@ -107,8 +113,10 @@ public class DB extends BaseUtil {
                 if (sql.endsWith(",")) sql = sql.substring(0, sql.length() - 1);
                 sql = sql + ") VALUES (";
                 for (String key : set) {
-                    String value = data.getData().get(key);
-                    sql = sql + "\'" + value + "\'" + " ,";
+                    if (!key.equals("_id")) {
+                        String value = data.getData().get(key);
+                        sql = sql + "\'" + value + "\'" + " ,";
+                    }
                 }
                 if (sql.endsWith(",")) sql = sql.substring(0, sql.length() - 1);
                 sql = sql + ")";
@@ -131,13 +139,18 @@ public class DB extends BaseUtil {
     }
     
     /**
+     * 修改已有的数据
+     *
      * @param data 要修改的数据
      * @return 是否修改成功
-     * 修改已有的数据
      */
     public boolean update(@NonNull DBData data) {
         if (data.getInt("_id") == 0) {
             error("只能对已存在的数据（使用find查询出来的数据）进行修改");
+            return false;
+        }
+        if (dbVersion == 0) {
+            error(ERROR_NO_DB);
             return false;
         }
         if (db == null) {
@@ -150,8 +163,10 @@ public class DB extends BaseUtil {
             
             Set<String> set = data.getData().keySet();
             for (String key : set) {
-                String value = data.getData().get(key);
-                sql = sql + " " + key + " = \'" + value + "\' ,";
+                if (!key.equals("_id")) {
+                    String value = data.getData().get(key);
+                    sql = sql + " " + key + " = \'" + value + "\' ,";
+                }
             }
             if (sql.endsWith(","))
                 sql = sql.substring(0, sql.length() - 1);
@@ -171,13 +186,18 @@ public class DB extends BaseUtil {
     }
     
     /**
+     * 删除一个已有的数据
+     *
      * @param data 要删除的数据
      * @return 是否删除成功
-     * 删除一个已有的数据
      */
     public boolean delete(@NonNull DBData data) {
         if (data.getInt("_id") == 0) {
             error("只能对已存在的数据（使用find查询出来的数据）进行删除");
+            return false;
+        }
+        if (dbVersion == 0) {
+            error(ERROR_NO_DB);
             return false;
         }
         if (db == null) {
@@ -200,23 +220,28 @@ public class DB extends BaseUtil {
     }
     
     /**
+     * 删除一个未知的数据，会根据查询条件 conditions 进行查询，并对查询到的结果进行删除
+     *
      * @param conditions 要删除的数据的查询条件
      * @return 是否删除成功
-     * 删除一个未知的数据，会根据查询条件 conditions 进行查询，并对查询到的结果进行删除
      */
     public boolean deleteFind(@NonNull DBData conditions) {
+        if (dbVersion == 0) {
+            error(ERROR_NO_DB);
+            return false;
+        }
         if (db == null) {
             helper = new SqlliteHelper(context, dbName, dbVersion);
             db = helper.getWritableDatabase();
         }
         List<DBData> dataList = find(conditions);
-        if (dataList.size()==0){
+        if (dataList.size() == 0) {
             error("没有找到任何符合删除条件的目标数据");
             return false;
         }
-        for (DBData dbData:dataList){
+        for (DBData dbData : dataList) {
             boolean result = delete(dbData);
-            if (!result){
+            if (!result) {
                 return false;
             }
         }
@@ -224,11 +249,16 @@ public class DB extends BaseUtil {
     }
     
     /**
+     * 清空一个数据表
+     *
      * @param tableName 要清空的数据库表名
      * @return 是否清空成功
-     * 清空一个数据库
      */
-    public void deleteAll(@NonNull String tableName) {
+    public boolean deleteAll(@NonNull String tableName) {
+        if (dbVersion == 0) {
+            error(ERROR_NO_DB);
+            return false;
+        }
         if (db == null) {
             helper = new SqlliteHelper(context, dbName, dbVersion);
             db = helper.getWritableDatabase();
@@ -240,18 +270,27 @@ public class DB extends BaseUtil {
             db.execSQL(sql);
             db.execSQL("update sqlite_sequence set seq=0 where name='" + tableName + "';");          //将自增键初始化为0
             db.setTransactionSuccessful();  //设置事务成功完成
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         } finally {
             db.endTransaction();    //结束事务
         }
+        return true;
     }
     
     /**
+     * 全表查询，会以查询条件中的键值对作为条件进行查询
+     *
      * @param tableName 表名
      * @param sort      排序方法
      * @return 查询结果，请以 list.size()==0 来判断没有结果
-     * 全表查询，会以查询条件中的键值对作为条件进行查询
      */
     public List<DBData> findAll(@NonNull String tableName, int sort) {
+        if (dbVersion == 0) {
+            error(ERROR_NO_DB);
+            return new ArrayList<>();
+        }
         if (db == null) {
             helper = new SqlliteHelper(context, dbName, dbVersion);
             db = helper.getWritableDatabase();
@@ -285,11 +324,16 @@ public class DB extends BaseUtil {
     }
     
     /**
+     * 按条件查询，会以查询条件中的键值对作为条件进行查询
+     *
      * @param conditions 查询条件
      * @return 查询结果，请以 list.size()==0 来判断没有结果
-     * 按条件查询，会以查询条件中的键值对作为条件进行查询
      */
     public List<DBData> find(@NonNull DBData conditions, int sort) {
+        if (dbVersion == 0) {
+            error(ERROR_NO_DB);
+            return new ArrayList<>();
+        }
         if (db == null) {
             helper = new SqlliteHelper(context, dbName, dbVersion);
             db = helper.getWritableDatabase();
@@ -314,9 +358,10 @@ public class DB extends BaseUtil {
     }
     
     /**
+     * 正序按条件查询，会以查询条件中的键值对作为条件进行查询
+     *
      * @param conditions 查询条件
      * @return 查询结果，请以 list.size()==0 来判断没有结果
-     * 正序按条件查询，会以查询条件中的键值对作为条件进行查询
      */
     public List<DBData> find(@NonNull DBData conditions) {
         return find(conditions, SORT_NORMAL);
@@ -346,11 +391,12 @@ public class DB extends BaseUtil {
     }
     
     /**
+     * 更新一个已有的旧表
+     *
      * @param tableName 表名
      * @param newKeys   新增的列名
-     *                  更新一个已有的旧表
      */
-    public void updateTable(String tableName, List<String> newKeys) {
+    public void updateTable(@NonNull String tableName, @NonNull List<String> newKeys) {
         updateTableSQLCommand = "ALTER TABLE " + tableName + " ADD ";
         for (String key : newKeys) {
             updateTableSQLCommand = updateTableSQLCommand + " " + key + " VARCHAR,";
@@ -362,17 +408,77 @@ public class DB extends BaseUtil {
         log("SQL.exec: " + updateTableSQLCommand);
         
         dbVersion++;
-        Preferences.getInstance().set(context, "KongzueDB", "dbName.version", dbVersion);
+        Preferences.getInstance().set(context, "KongzueDB", dbName + ".version", dbVersion);
         closeDB();
         helper = new SqlliteHelper(context, dbName, dbVersion);
         db = helper.getWritableDatabase();
     }
     
     /**
-     * @param data 数据源范例
-     *             创建一个新表，按照 data 作为样板进行创建，data.getTableName() 作为表名，data中所有键作为列进行创建
+     * 查询一个表的内容数量
+     *
+     * @param tableName 表名
+     * @return 查询数量结果
      */
-    public void createNewTable(DBData data) {
+    public long getCount(@NonNull String tableName) {
+        return getCount(tableName, null);
+    }
+    
+    /**
+     * 按条件查询一个表的内容数量
+     *
+     * @param tableName  表名
+     * @param conditions 查询条件
+     * @return 查询数量结果
+     */
+    public long getCount(@NonNull String tableName, DBData conditions) {
+        if (dbVersion == 0) {
+            error(ERROR_NO_DB);
+            return 0;
+        }
+        if (db == null) {
+            helper = new SqlliteHelper(context, dbName, dbVersion);
+            db = helper.getWritableDatabase();
+        }
+        long count = 0;
+        db.beginTransaction();
+        try {
+            String sql = "select count(*) from " + tableName;
+            
+            if (conditions != null) {
+                sql = sql + " where ";
+                Set<String> set = conditions.getData().keySet();
+                for (String key : set) {
+                    String value = conditions.getData().get(key);
+                    sql = sql + " " + key + " = \'" + value + "\' ,";
+                }
+                if (sql.endsWith(","))
+                    sql = sql.substring(0, sql.length() - 1);
+            }
+            
+            log("SQL.exec: " + sql);
+            
+            Cursor cursor = db.rawQuery(sql, null);
+            cursor.moveToFirst();
+            count = cursor.getLong(0);
+            cursor.close();
+            
+            db.setTransactionSuccessful();  //设置事务成功完成
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        } finally {
+            db.endTransaction();    //结束事务
+        }
+        return count;
+    }
+    
+    /**
+     * 创建一个新表，按照 data 作为样板进行创建，data.getTableName() 作为表名，data中所有键作为列进行创建
+     *
+     * @param data 数据源范例
+     */
+    public void createNewTable(@NonNull DBData data) {
         newTableSQLCommand = "CREATE TABLE IF NOT EXISTS " + data.getTableName() + " (" +
                 "_id INTEGER PRIMARY KEY AUTOINCREMENT, ";
         Set<String> set = data.getData().keySet();
@@ -390,7 +496,7 @@ public class DB extends BaseUtil {
             newTableSQLCommand = null;
         }
         dbVersion++;
-        Preferences.getInstance().set(context, "KongzueDB", "dbName.version", dbVersion);
+        Preferences.getInstance().set(context, "KongzueDB", dbName + ".version", dbVersion);
         closeDB();
         helper = new SqlliteHelper(context, dbName, dbVersion);
         db = helper.getWritableDatabase();

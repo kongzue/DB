@@ -25,7 +25,7 @@ public class BaseUtil {
     }
     
     public void error(Object o) {
-        if (DEBUGMODE)Log.e("DB>>>", o.toString());
+        Log.e("DB>>>", o.toString());
     }
     
 }

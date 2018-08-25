@@ -6,6 +6,93 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="注意：所有测试请到Android Studio的控制台查看日志结果"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="测试1"/>
+
+        <Button
+            android:id="@+id/btn_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="插入5条数据"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="测试2"/>
+
+        <Button
+            android:id="@+id/btn_printAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="查询所有数据"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="测试3"/>
+
+        <Button
+            android:id="@+id/btn_find18"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="查询所有age=18的数据"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="测试4"/>
+
+        <Button
+            android:id="@+id/btn_delete22"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="删除age=22的数据"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="测试5"/>
+
+        <Button
+            android:id="@+id/btn_update18"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="修改所有age=18的数据为age=22"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="测试6"/>
+
+        <Button
+            android:id="@+id/btn_findCount22"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="查询age=22的数量"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="清空数据库"/>
+
+        <Button
+            android:id="@+id/btn_deleteAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="清空数据库"/>
+
+    </LinearLayout>
 
 </RelativeLayout>
