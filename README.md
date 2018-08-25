@@ -30,9 +30,9 @@ Demo预览图如下：
 Maven仓库：
 ```
 <dependency>
-  <groupId>com.kongzue.baseframework</groupId>
-  <artifactId>baseframework</artifactId>
-  <version>6.5.5.1</version>
+  <groupId>com.kongzue.kongzuedb</groupId>
+  <artifactId>kongzuedb</artifactId>
+  <version>1.0.0</version>
   <type>pom</type>
 </dependency>
 ```
