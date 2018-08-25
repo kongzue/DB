@@ -1,7 +1,7 @@
 # KongzueDB
 简单易用的SQLite封装
 
-<a href="https://github.com/kongzue/KongzueDB/">
+<a href="https://github.com/kongzue/DB/">
 <img src="https://img.shields.io/badge/Kongzue%20DB-1.0.0-green.svg" alt="Kongzue DB">
 </a>
 <a href="https://bintray.com/myzchh/maven/KongzueDB/1.0.0/link">
