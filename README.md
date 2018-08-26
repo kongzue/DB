@@ -2,10 +2,10 @@
 简单易用的SQLite封装
 
 <a href="https://github.com/kongzue/DB/">
-<img src="https://img.shields.io/badge/Kongzue%20DB-1.0.0-green.svg" alt="Kongzue DB">
+<img src="https://img.shields.io/badge/Kongzue%20DB-1.0.1-green.svg" alt="Kongzue DB">
 </a>
-<a href="https://bintray.com/myzchh/maven/KongzueDB/1.0.0/link">
-<img src="https://img.shields.io/badge/Maven-1.0.0-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/KongzueDB/1.0.1/link">
+<img src="https://img.shields.io/badge/Maven-1.0.1-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -32,14 +32,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.kongzuedb</groupId>
   <artifactId>kongzuedb</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.kongzuedb:kongzuedb:1.0.0'
+implementation 'com.kongzue.kongzuedb:kongzuedb:1.0.1'
 ```
 
 ## 使用方法：
@@ -188,5 +188,8 @@ db.updateTable(tableName, newKeys);
 ```
 
 ## 更新日志：
+v1.0.1:
+- 修复了一些bug；
+
 v1.0.0:
 - 首次发布；
