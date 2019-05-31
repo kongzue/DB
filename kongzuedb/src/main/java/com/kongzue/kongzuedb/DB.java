@@ -61,39 +61,8 @@ public class DB extends BaseUtil {
     public boolean add(@NonNull DBData data, boolean isAllowRepetition) {
         try {
             String tableName = data.getTableName();
-            if (helper == null) {
-                //如果没初始化，现在初始化
-                createTableSQLCommand = "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
-                        "_id INTEGER PRIMARY KEY AUTOINCREMENT, ";
-                
-                Set<String> set = data.getData().keySet();
-                
-                if (set.size() == 0) {
-                    error("Data中没有任何数据");
-                    return false;
-                }
-                
-                for (String key : set) {
-                    String value = data.getData().get(key);
-                    if (!isNull(key) && !isNull(value)) {
-                        if (!key.equals("_id")) {
-                            createTableSQLCommand = createTableSQLCommand + " " + key + " VARCHAR,";
-                        }
-                    }
-                }
-                
-                if (createTableSQLCommand.endsWith(","))
-                    createTableSQLCommand = createTableSQLCommand.substring(0, createTableSQLCommand.length() - 1);
-                
-                createTableSQLCommand = createTableSQLCommand + ")";
-                
-                log("SQL.exec: " + createTableSQLCommand);
-                
-                if (dbVersion == 0) dbVersion = 1;
-                Preferences.getInstance().set(context, "KongzueDB", dbName + ".version", dbVersion);
-                closeDB();
-                helper = new SqlliteHelper(context, dbName, dbVersion);
-                db = helper.getWritableDatabase();
+            if (!isHaveTable(data.getTableName())) {
+                createNewTable(data);
             }
             if (!isAllowRepetition) {
                 List<DBData> queryResult = find(data);
@@ -297,7 +266,12 @@ public class DB extends BaseUtil {
         }
         
         List<DBData> list = new ArrayList<DBData>();
-        Cursor c = getQueryCursor(tableName);
+        Cursor c;
+        try {
+            c = getQueryCursor(tableName);
+        } catch (Exception e) {
+            return list;
+        }
         while (c.moveToNext()) {
             DBData data = new DBData(tableName);
             for (int i = 0; i < c.getColumnCount(); i++) {
@@ -340,7 +314,12 @@ public class DB extends BaseUtil {
         }
         
         List<DBData> list = new ArrayList<DBData>();
-        Cursor c = getQueryCursor(conditions);
+        Cursor c;
+        try {
+            c = getQueryCursor(conditions);
+        } catch (Exception e) {
+            return list;
+        }
         while (c.moveToNext()) {
             DBData data = new DBData(conditions.getTableName());
             for (int i = 0; i < c.getColumnCount(); i++) {
@@ -473,12 +452,47 @@ public class DB extends BaseUtil {
         return count;
     }
     
+    public boolean isHaveTable(@NonNull String tableName) {
+        if (dbVersion == 0) {
+            error(ERROR_NO_DB);
+            return false;
+        }
+        if (db == null) {
+            helper = new SqlliteHelper(context, dbName, dbVersion);
+            db = helper.getWritableDatabase();
+        }
+        db.beginTransaction();
+        try {
+            Cursor c = db.rawQuery("select name from sqlite_master where type='table';", null);
+            while (c.moveToNext()) {
+                //遍历出表名
+                if (c.getString(0).equals(tableName)) {
+                    return true;
+                }
+            }
+            c.close();
+            
+            db.setTransactionSuccessful();  //设置事务成功完成
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            db.endTransaction();    //结束事务
+        }
+        return false;
+    }
+    
     /**
      * 创建一个新表，按照 data 作为样板进行创建，data.getTableName() 作为表名，data中所有键作为列进行创建
      *
      * @param data 数据源范例
      */
     public void createNewTable(@NonNull DBData data) {
+        if (isHaveTable(data.getTableName())) {
+            error("错误：已存在表" + data.getTableName());
+            return;
+        }
+        
         newTableSQLCommand = "CREATE TABLE IF NOT EXISTS " + data.getTableName() + " (" +
                 "_id INTEGER PRIMARY KEY AUTOINCREMENT, ";
         Set<String> set = data.getData().keySet();
@@ -488,6 +502,8 @@ public class DB extends BaseUtil {
         
         if (newTableSQLCommand.endsWith(","))
             newTableSQLCommand = newTableSQLCommand.substring(0, newTableSQLCommand.length() - 1);
+        
+        newTableSQLCommand = newTableSQLCommand + ")";
         
         log("SQL.exec: " + newTableSQLCommand);
         

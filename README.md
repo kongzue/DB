@@ -2,10 +2,10 @@
 简单易用的SQLite封装
 
 <a href="https://github.com/kongzue/DB/">
-<img src="https://img.shields.io/badge/Kongzue%20DB-1.0.1-green.svg" alt="Kongzue DB">
+<img src="https://img.shields.io/badge/Kongzue%20DB-1.0.4-green.svg" alt="Kongzue DB">
 </a>
-<a href="https://bintray.com/myzchh/maven/KongzueDB/1.0.1/link">
-<img src="https://img.shields.io/badge/Maven-1.0.1-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/KongzueDB/1.0.4/link">
+<img src="https://img.shields.io/badge/Maven-1.0.4-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -32,14 +32,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.kongzuedb</groupId>
   <artifactId>kongzuedb</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.4</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.kongzuedb:kongzuedb:1.0.1'
+implementation 'com.kongzue.kongzuedb:kongzuedb:1.0.4'
 ```
 
 ## 使用方法：
@@ -76,6 +76,11 @@ db.createNewTable(new DBData(tableName)
 ```
 
 这里推荐使用第一种方法，直接创建数据表
+
+3) 判断一张表是否存在
+```
+isHaveTable(tableName)
+```
 
 #### 添加数据
 ```
@@ -188,6 +193,11 @@ db.updateTable(tableName, newKeys);
 ```
 
 ## 更新日志：
+v1.0.4:
+- 修复了无法创建多张表的bug；
+- 新增 isHaveTable(tableName) 用于检测表是否存在；
+- 对所有创建查询指针 Cursor 进行了异常判断，以保证在表不存在或其他情况时不会造成崩溃；
+
 v1.0.1:
 - 修复了一些bug；
 

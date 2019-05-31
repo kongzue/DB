@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnUpdate18;
     private Button btnFindCount22;
     private Button btnDeleteAll;
+    private Button btnCreateTable2;
     
     DB db;
     
@@ -40,8 +41,9 @@ public class MainActivity extends AppCompatActivity {
         btnUpdate18 = findViewById(R.id.btn_update18);
         btnFindCount22 = findViewById(R.id.btn_findCount22);
         btnDeleteAll = findViewById(R.id.btn_deleteAll);
+        btnCreateTable2 = findViewById(R.id.btn_createTable2);
         
-        BaseUtil.DEBUGMODE = false;                     //是否开启日志输出模式，主要用于打印sql执行语句
+        BaseUtil.DEBUGMODE = true;                     //是否开启日志输出模式，主要用于打印sql执行语句
         
         db = new DB(this, dbName);    //准备数据库
         
@@ -130,6 +132,15 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 boolean errorFlag= db.deleteAll(tableName);
                 toast("执行完毕，结果：" + (errorFlag ? "成功" : "失败"));
+            }
+        });
+    
+        btnCreateTable2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DBData dbData = new DBData("table2");
+                dbData.set("name", "张三").set("age", 18).set("phone", 18513000000l);
+                db.createNewTable(dbData);
             }
         });
     }
