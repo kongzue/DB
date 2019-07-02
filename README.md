@@ -2,10 +2,10 @@
 简单易用的SQLite封装
 
 <a href="https://github.com/kongzue/DB/">
-<img src="https://img.shields.io/badge/Kongzue%20DB-1.0.4-green.svg" alt="Kongzue DB">
+<img src="https://img.shields.io/badge/Kongzue%20DB-1.0.8-green.svg" alt="Kongzue DB">
 </a>
-<a href="https://bintray.com/myzchh/maven/KongzueDB/1.0.4/link">
-<img src="https://img.shields.io/badge/Maven-1.0.4-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/KongzueDB/1.0.8/link">
+<img src="https://img.shields.io/badge/Maven-1.0.8-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -32,14 +32,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.kongzuedb</groupId>
   <artifactId>kongzuedb</artifactId>
-  <version>1.0.4</version>
+  <version>1.0.8</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.kongzuedb:kongzuedb:1.0.4'
+implementation 'com.kongzue.kongzuedb:kongzuedb:1.0.8'
 ```
 
 ## 使用方法：
@@ -193,6 +193,10 @@ db.updateTable(tableName, newKeys);
 ```
 
 ## 更新日志：
+v1.0.8:
+- DB 新增 findWithoutId(...) 方法，可实现排除“_id”字段的查询；
+- 修复已知 bug；
+
 v1.0.4:
 - 修复了无法创建多张表的bug；
 - 新增 isHaveTable(tableName) 用于检测表是否存在；
