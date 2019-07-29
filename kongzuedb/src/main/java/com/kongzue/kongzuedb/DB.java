@@ -13,6 +13,7 @@ import com.kongzue.kongzuedb.util.Preferences;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Author: @Kongzue
@@ -23,10 +24,8 @@ import java.util.Set;
  */
 public class DB extends BaseUtil {
     
-    public final String ERROR_NO_DB = "数据库不存在，请先通过add()或createNewTable()来创建一个数据库";
-    
-    public final int SORT_NORMAL = 0;       //排序原则：正序
-    public final int SORT_BACK = 1;       //排序原则：倒序
+    public static final int SORT_NORMAL = 0;       //排序原则：正序
+    public static final int SORT_BACK = 1;       //排序原则：倒序
     
     private Context context;
     private SqlliteHelper helper;
@@ -109,14 +108,26 @@ public class DB extends BaseUtil {
     }
     
     /**
+     * 查询，仅返回是否存在此条件的数据
+     *
+     * @param conditions 样板条件
+     * @return 是否存在样板条件数据
+     */
+    public boolean isHave(DBData conditions) {
+        List<DBData> result = findWithoutId(conditions);
+        if (result != null && !result.isEmpty()) return true;
+        return false;
+    }
+    
+    /**
      * 查找，但排除_id字段
      *
-     * @param conditions 数据源
+     * @param conditions 样板条件
      * @return 查询结果
      */
     public List<DBData> findWithoutId(DBData conditions) {
         if (dbVersion == 0) {
-            error(ERROR_NO_DB);
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
             return new ArrayList<>();
         }
         if (db == null) {
@@ -155,7 +166,7 @@ public class DB extends BaseUtil {
             return false;
         }
         if (dbVersion == 0) {
-            error(ERROR_NO_DB);
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
             return false;
         }
         if (db == null) {
@@ -202,7 +213,7 @@ public class DB extends BaseUtil {
             return false;
         }
         if (dbVersion == 0) {
-            error(ERROR_NO_DB);
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
             return false;
         }
         if (db == null) {
@@ -232,7 +243,7 @@ public class DB extends BaseUtil {
      */
     public boolean deleteFind(DBData conditions) {
         if (dbVersion == 0) {
-            error(ERROR_NO_DB);
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
             return false;
         }
         if (db == null) {
@@ -261,7 +272,7 @@ public class DB extends BaseUtil {
      */
     public boolean deleteAll(String tableName) {
         if (dbVersion == 0) {
-            error(ERROR_NO_DB);
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
             return false;
         }
         if (db == null) {
@@ -285,7 +296,7 @@ public class DB extends BaseUtil {
     }
     
     /**
-     * 全表查询，会以查询条件中的键值对作为条件进行查询
+     * 全表查询
      *
      * @param tableName 表名
      * @param sort      排序方法
@@ -293,7 +304,7 @@ public class DB extends BaseUtil {
      */
     public List<DBData> findAll(String tableName, int sort) {
         if (dbVersion == 0) {
-            error(ERROR_NO_DB);
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
             return new ArrayList<>();
         }
         if (db == null) {
@@ -325,6 +336,119 @@ public class DB extends BaseUtil {
     }
     
     /**
+     * 条件查询
+     *
+     * @param tableName 表名
+     * @param conditions 查询条件，例如：  TABLE_COLUMN_NAME like 'ABC'
+     * @return 查询结果，请以 list.size()==0 来判断没有结果
+     */
+    public List<DBData> findConditions(String tableName, String conditions) {
+        if (dbVersion == 0) {
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
+            return new ArrayList<>();
+        }
+        if (db == null) {
+            helper = new SqlliteHelper(context, dbName, dbVersion);
+            db = helper.getWritableDatabase();
+        }
+        
+        List<DBData> list = new ArrayList<DBData>();
+        Cursor c;
+        try {
+            c = getQueryCursor(tableName,conditions);
+        } catch (Exception e) {
+            return list;
+        }
+        while (c.moveToNext()) {
+            DBData data = new DBData(tableName);
+            for (int i = 0; i < c.getColumnCount(); i++) {
+                String key = c.getColumnName(i);
+                data.set(key, c.getString(c.getColumnIndex(key)));
+            }
+            list.add(data);
+        }
+        c.close();
+        return list;
+    }
+    
+    /**
+     * 全表分页查询
+     *
+     * @param tableName 表名
+     * @param start     开始索引
+     * @param count     数量
+     * @param sort      排序方法
+     * @return 查询结果，请以 list.size()==0 来判断没有结果
+     */
+    public List<DBData> findSub(String tableName, int start, int count, int sort) {
+        if (dbVersion == 0) {
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
+            return new ArrayList<>();
+        }
+        if (db == null) {
+            helper = new SqlliteHelper(context, dbName, dbVersion);
+            db = helper.getWritableDatabase();
+        }
+        
+        List<DBData> list = new ArrayList<DBData>();
+        Cursor c;
+        try {
+            c = getQueryCursor(tableName, start, count);
+        } catch (Exception e) {
+            return list;
+        }
+        while (c.moveToNext()) {
+            DBData data = new DBData(tableName);
+            for (int i = 0; i < c.getColumnCount(); i++) {
+                String key = c.getColumnName(i);
+                data.set(key, c.getString(c.getColumnIndex(key)));
+            }
+            if (sort == SORT_NORMAL) {
+                list.add(data);
+            } else if (sort == SORT_BACK) {
+                list.add(0, data);
+            }
+        }
+        c.close();
+        return list;
+    }
+    
+    public List<DBData> findSub(String tableName, int start, int count) {
+        return findSub(tableName, start, count, SORT_NORMAL);
+    }
+    
+    public List<DBData> findSub(String tableName, int start, int count, String sortName, int sort) {
+        if (dbVersion == 0) {
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
+            return new ArrayList<>();
+        }
+        if (db == null) {
+            helper = new SqlliteHelper(context, dbName, dbVersion);
+            db = helper.getWritableDatabase();
+        }
+        
+        List<DBData> list = new ArrayList<DBData>();
+        Cursor c;
+        try {
+            c = getQueryCursor(tableName, start, count, sortName, sort);
+        } catch (Exception e) {
+            return list;
+        }
+        while (c.moveToNext()) {
+            DBData data = new DBData(tableName);
+            for (int i = 0; i < c.getColumnCount(); i++) {
+                String key = c.getColumnName(i);
+                String value = c.getString(c.getColumnIndex(key));
+                
+                data.set(key, value);
+            }
+            list.add(data);
+        }
+        c.close();
+        return list;
+    }
+    
+    /**
      * @param tableName 表名
      * @return 查询结果，请以 list.size()==0 来判断没有结果
      * 全表正序查询，会以查询条件中的键值对作为条件进行查询
@@ -341,7 +465,7 @@ public class DB extends BaseUtil {
      */
     public List<DBData> find(DBData conditions, int sort) {
         if (dbVersion == 0) {
-            error(ERROR_NO_DB);
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
             return new ArrayList<>();
         }
         if (db == null) {
@@ -385,8 +509,32 @@ public class DB extends BaseUtil {
     //查询指针
     private Cursor getQueryCursor(String tableName) {
         String sql = "SELECT * FROM " + tableName;
-        Cursor c = db.rawQuery(sql, null);
         log("SQL.exec: " + sql);
+        Cursor c = db.rawQuery(sql, null);
+        return c;
+    }
+    
+    //条件查询指针
+    private Cursor getQueryCursor(String tableName,String conditions) {
+        String sql = "SELECT * FROM " + tableName +" WHERE " + conditions;
+        log("SQL.exec: " + sql);
+        Cursor c = db.rawQuery(sql, null);
+        return c;
+    }
+    
+    //查询指针（分页）
+    private Cursor getQueryCursor(String tableName, int start, int count) {
+        String sql = "SELECT * FROM " + tableName + " limit " + start + "," + count;
+        log("SQL.exec: " + sql);
+        Cursor c = db.rawQuery(sql, null);
+        return c;
+    }
+    
+    //查询指针（分页） + 指定排序
+    private Cursor getQueryCursor(String tableName, int start, int count, String sortName, int sort) {
+        String sql = "SELECT * FROM " + tableName + " ORDER BY CAST(" + sortName + " AS REAL) " + (sort == SORT_NORMAL ? "ASC" : "DESC") +  " limit " + start + "," + count ;
+        log("SQL.exec: " + sql);
+        Cursor c = db.rawQuery(sql, null);
         return c;
     }
     
@@ -465,7 +613,7 @@ public class DB extends BaseUtil {
      */
     public long getCount(String tableName, DBData conditions) {
         if (dbVersion == 0) {
-            error(ERROR_NO_DB);
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
             return 0;
         }
         if (db == null) {
@@ -507,7 +655,7 @@ public class DB extends BaseUtil {
     
     public boolean isHaveTable(String tableName) {
         if (dbVersion == 0) {
-            error(ERROR_NO_DB);
+            error("数据库不存在，请先通过add()或createNewTable()来创建一个数据库");
             return false;
         }
         if (db == null) {
@@ -550,8 +698,9 @@ public class DB extends BaseUtil {
                 "_id INTEGER PRIMARY KEY AUTOINCREMENT, ";
         Set<String> set = data.getData().keySet();
         for (String key : set) {
+            String value = data.getData().get(key);
             if (!key.equals("_id")) {
-                newTableSQLCommand = newTableSQLCommand + " " + key + " VARCHAR,";
+                newTableSQLCommand = newTableSQLCommand + " " + key + " TEXT,";
             }
         }
         
@@ -571,6 +720,16 @@ public class DB extends BaseUtil {
         closeDB();
         helper = new SqlliteHelper(context, dbName, dbVersion);
         db = helper.getWritableDatabase();
+    }
+    
+    private boolean isNumeric(String str) {
+        Pattern pattern = Pattern.compile("-?[0-9]*");
+        return pattern.matcher(str).matches();
+    }
+    
+    private boolean isDecimal(String str) {
+        Pattern pattern = Pattern.compile("-?[0-9]*.?[0-9]*");
+        return pattern.matcher(str).matches();
     }
     
     private class SqlliteHelper extends SQLiteOpenHelper {
@@ -600,4 +759,44 @@ public class DB extends BaseUtil {
         if (db != null) db.close();
     }
     
+    private DBData parameter;
+    
+    public DB addParameter(String key, String value) {
+        if (parameter == null) parameter = new DBData("");
+        parameter.set(key, value);
+        return this;
+    }
+    
+    /**
+     * 通过addParameter(key,value)添加查询条件进行条件查询
+     *
+     * @param tableName 表名
+     */
+    public List<DBData> find(String tableName) {
+        if (parameter != null) {
+            parameter.setTableName(tableName);
+            List<DBData> result = find(parameter);
+            parameter = null;
+            return result;
+        }
+        error("请先通过addParameter(key,value)添加查询条件");
+        return null;
+    }
+    
+    /**
+     * 通过addParameter(key,value)添加查询条件进行查询，仅返回是否存在此条件的数据
+     *
+     * @param tableName 表名
+     * @return 是否存在样板条件数据
+     */
+    public boolean isHave(String tableName) {
+        if (parameter == null) {
+            error("请先通过addParameter(key,value)添加查询条件");
+            return false;
+        }
+        List<DBData> result = findWithoutId(parameter);
+        parameter = null;
+        if (result != null && !result.isEmpty()) return true;
+        return false;
+    }
 }

@@ -6,16 +6,16 @@ def siteUrl = 'https://github.com/kongzue/DB' //项目在github主页地址
 def gitUrl = 'https://github.com/kongzue/DB.git'   //Git仓库的地址
 
 group = "com.kongzue.kongzuedb"//发布aar前缀根节点
-version = "1.0.8"//发布aar的库版本
+version = "1.0.9"//发布aar的库版本
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     defaultConfig {
         minSdkVersion 17
-        targetSdkVersion 27
-        versionCode 8
-        versionName "1.0.8"
+        targetSdkVersion 28
+        versionCode 9
+        versionName "1.0.9"
     }
 
     buildTypes {
@@ -88,6 +88,6 @@ bintray {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:27.+'
-    implementation 'com.android.support:support-v4:27.+'
+    implementation 'com.android.support:appcompat-v7:28.+'
+    implementation 'com.android.support:support-v4:28.+'
 }

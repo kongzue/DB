@@ -2,10 +2,10 @@
 简单易用的SQLite封装
 
 <a href="https://github.com/kongzue/DB/">
-<img src="https://img.shields.io/badge/Kongzue%20DB-1.0.8-green.svg" alt="Kongzue DB">
+<img src="https://img.shields.io/badge/Kongzue%20DB-1.0.9-green.svg" alt="Kongzue DB">
 </a>
-<a href="https://bintray.com/myzchh/maven/KongzueDB/1.0.8/link">
-<img src="https://img.shields.io/badge/Maven-1.0.8-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/KongzueDB/1.0.9/link">
+<img src="https://img.shields.io/badge/Maven-1.0.9-blue.svg" alt="Maven">
 </a>
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -32,14 +32,14 @@ Maven仓库：
 <dependency>
   <groupId>com.kongzue.kongzuedb</groupId>
   <artifactId>kongzuedb</artifactId>
-  <version>1.0.8</version>
+  <version>1.0.9</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.kongzuedb:kongzuedb:1.0.8'
+implementation 'com.kongzue.kongzuedb:kongzuedb:1.0.9'
 ```
 
 ## 使用方法：
@@ -122,7 +122,7 @@ db.update(DBData);
 #### 查询数据
 查询所有数据：
 ```
-List<DBData> allData = db.findAll(tableName);
+List<DBData> allData = db.findAll("user");          //查询"user"表中所有数据
 for (DBData data : allData) {
     //data即查询出的数据
     log(data);
@@ -132,7 +132,7 @@ for (DBData data : allData) {
 依据条件查询：
 ```
 //传入的 DBData 为数据条件
-List<DBData> dataList = db.find(new DBData("user").set("age", 18));
+List<DBData> dataList = db.find(new DBData("user").set("age", 18));     //指定“user”表中 age = 18 为条件查询所有数据
 for (DBData data : dataList) {
     log(data);
 }
@@ -145,6 +145,28 @@ for (DBData data : dataList) {
 //sort 可选值为 DB.SORT_NORMAL 或 DB.SORT_BACK，默认为 DB.SORT_NORMAL，若使用 DB.SORT_BACK 则可以输出倒序的结果
 db.findAll(tableName, SORT_NORMAL);
 db.find(new DBData("user").set("age", 18), SORT_NORMAL);
+```
+
+根据传入参数 DBData 对象的键值对作为条件检查是否存在符合条件的数据：
+```
+DBData conditions = new DBData("user");         //指定要查询的表名"user"
+conditions.set("age", 18);                      //查询条件
+boolean isHaveData = db.isHave();               //获取是否存在
+```
+
+自定义查询条件语句查询（SQL条件语句）：
+```
+List<DBData> dataList = db.findConditions("user", "name like '%张%'");       //查询"user"表中"name"字段有含“张”字的结果
+for (DBData data : dataList) {
+    log(data);
+}
+```
+
+分页查询：
+```
+List<DBData> dataList = findSub("user", 0, 10);                             //查询"user"表中前10个数据
+List<DBData> dataList = findSub("user", 0, 10, DB.SORT_BACK);               //查询"user"表中前10个数据，并按照添加顺序倒序
+List<DBData> dataList = findSub("user", 0, 10, "age",DB.SORT_BACK);         //查询"user"表中前10个数据，并按照"age"字段倒序
 ```
 
 #### 额外方法
@@ -177,22 +199,27 @@ db.updateTable(tableName, newKeys);
 
 ## 开源协议
 ```
-   Copyright KongzueDB
+Copyright KongzueDB
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-     http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 ```
 
 ## 更新日志：
+v1.0.9:
+- 新增 isHave(DBData) 方法用于根据传入参数 DBData 对象的键值对检查是否存在符合条件的数据；
+- 新增 findConditions(tableName, conditions) 可自定义查询条件语句 conditions 进行查询；
+- 新增 findSub(tableName, start, count, sortName(可选参数), sort(可选参数)) 可进行分页查询；
+
 v1.0.8:
 - DB 新增 findWithoutId(...) 方法，可实现排除“_id”字段的查询；
 - 修复已知 bug；

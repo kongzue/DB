@@ -54,15 +54,39 @@ public class MainActivity extends AppCompatActivity {
                 int errorNum = 0;
                 
                 DBData dbData = new DBData(tableName);
-                dbData.set("name", "张三").set("age", 18).set("phone", 18513000000l);
+                dbData.set("name", "张三")
+                        .set("age", 18)
+                        .set("phone", 18513000000L);
                 if (!db.add(dbData, false)) errorNum++;
-                dbData.set("name", "李四").set("age", 22).set("phone", 13772656666l);
+    
+                dbData.set("name", "张三2")
+                        .set("age", 18.5)
+                        .set("phone", 13772656666L);
                 if (!db.add(dbData, false)) errorNum++;
-                dbData.set("name", "王五").set("age", 20).set("phone", 15555555555l);
+                
+                dbData.set("name", "李四")
+                        .set("age", 22)
+                        .set("phone", 13772656666L);
                 if (!db.add(dbData, false)) errorNum++;
-                dbData.set("name", "赵六").set("age", 18).set("phone", 18513012345l);
+                
+                dbData.set("name", "王五")
+                        .set("age", 20)
+                        .set("phone", 15555555555L);
                 if (!db.add(dbData, false)) errorNum++;
-                dbData.set("name", "钱七").set("age", 22).set("phone", 13313012345l);
+                
+                dbData.set("name", "赵六")
+                        .set("age", 18)
+                        .set("phone", 18513012345L);
+                if (!db.add(dbData, false)) errorNum++;
+                
+                dbData.set("name", "钱七2")
+                        .set("age", 22.1)
+                        .set("phone", 13313012345L);
+                if (!db.add(dbData, false)) errorNum++;
+    
+                dbData.set("name", "钱七")
+                        .set("age", 22)
+                        .set("phone", 13313012345L);
                 if (!db.add(dbData, false)) errorNum++;
                 
                 toast("执行完毕，错误" + errorNum + "个");
@@ -72,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         btnPrintAll.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                List<DBData> allData = db.findAll(tableName);
+                List<DBData> allData = db.findSub(tableName,0,7,"age",DB.SORT_BACK);
                 for (DBData data : allData) {
                     log(data);
                 }
